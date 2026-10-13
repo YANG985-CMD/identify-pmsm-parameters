@@ -1,0 +1,193 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "synthetic_simulink_benchmark",
+  "generatedAtUTC": "2026-10-13T04:35:54Z",
+  "matlabVersion": "24.2.0.2712019 (R2024b)",
+  "model": "pmsm_id_bench.slx",
+  "modelSHA256": "e53e334b2c76f18838f928748127213e418e9279c1a778756f32e0bd871c9ed6",
+  "truth": {
+    "Rs": 0.7,
+    "Ld": 0.004,
+    "Lq": 0.006,
+    "psi_f": 0.03
+  },
+  "bench": {
+    "Rs": 0.7,
+    "Ld": 0.004,
+    "Lq": 0.006,
+    "Flux": 0.03,
+    "VoltageDrop": 0.35,
+    "ResistanceDrop": 0.03,
+    "ZeroCurrent": 0.15,
+    "Phase": 0,
+    "StopTime": 0.6,
+    "SolverStep": 1E-5,
+    "SamplePeriod": 0.0001,
+    "InitialDCurrent": 0,
+    "InitialQCurrent": 0,
+    "DVoltageBias": 1.2,
+    "DVoltageAmplitude": [
+      0.8,
+      0.35
+    ],
+    "DVoltageFrequency": [
+      31,
+      9
+    ],
+    "QVoltageBias": 5,
+    "QVoltageAmplitude": [
+      1.1,
+      0.6
+    ],
+    "QVoltageFrequency": [
+      17,
+      4
+    ],
+    "SpeedBias": 160,
+    "SpeedAmplitude": 40,
+    "SpeedFrequency": 3
+  },
+  "windowSamples": 10,
+  "validationMaxRMSEAmps": [
+    0.05,
+    0.05
+  ],
+  "holdoutExcitationPhaseRad": 0.8,
+  "noise": {
+    "currentStdAmps": 0.005,
+    "commandVoltageStdVolts": 0.005,
+    "trainingSeed": 7,
+    "holdoutSeed": 8,
+    "calibrationVoltageStdVolts": 0.001,
+    "calibrationSeed": 43
+  },
+  "driftVoltageDropVolts": 0.5,
+  "calibration": {
+    "trainingRMSEVolts": 0.0010425613059283495,
+    "heldoutRMSEVolts": 0.00082858053091444477,
+    "source": "separate_synthetic_phase_sweep"
+  },
+  "cases": [
+    {
+      "scenario": "ideal",
+      "fit_status": "estimated_unvalidated",
+      "validation_status": "prediction_check_passed",
+      "Rs_ohm": 0.700000587267397,
+      "Ld_H": 0.0039999848076727991,
+      "Lq_H": 0.005999993829120631,
+      "flux_Wb": 0.030000014678552223,
+      "Rs_error_percent": 8.3895342435041147E-5,
+      "Ld_error_percent": -0.000379808180023776,
+      "Lq_error_percent": -0.0001028479894854319,
+      "flux_error_percent": 4.8928507414650976E-5,
+      "id_rmse_A": 1.8909912773866996E-5,
+      "iq_rmse_A": 1.0691130690118087E-5,
+      "rank": 4,
+      "scaled_condition": 1.8549460589909137
+    },
+    {
+      "scenario": "command_voltage",
+      "fit_status": "estimated_unvalidated",
+      "validation_status": "prediction_check_failed",
+      "Rs_ohm": 0.96538971876651947,
+      "Ld_H": 0.004090712367859837,
+      "Lq_H": 0.0062210581582208876,
+      "flux_Wb": 0.029570126442038346,
+      "Rs_error_percent": 37.912816966645643,
+      "Ld_error_percent": 2.2678091964959237,
+      "Lq_error_percent": 3.6843026370147909,
+      "flux_error_percent": -1.4329118598721777,
+      "id_rmse_A": 0.12851123628912867,
+      "iq_rmse_A": 0.061229133512372649,
+      "rank": 4,
+      "scaled_condition": 2.0057057489840693
+    },
+    {
+      "scenario": "actual_voltage_oracle",
+      "fit_status": "estimated_unvalidated",
+      "validation_status": "prediction_check_passed",
+      "Rs_ohm": 0.70000152192104625,
+      "Ld_H": 0.0039999513730810485,
+      "Lq_H": 0.0059999662350457787,
+      "flux_Wb": 0.030000040923021085,
+      "Rs_error_percent": 0.0002174172923284447,
+      "Ld_error_percent": -0.0012156729737883981,
+      "Lq_error_percent": -0.00056274923702452162,
+      "flux_error_percent": 0.00013641007028802887,
+      "id_rmse_A": 2.3512168355953274E-5,
+      "iq_rmse_A": 1.5606612323677547E-5,
+      "rank": 4,
+      "scaled_condition": 2.0057057489840693
+    },
+    {
+      "scenario": "ffnn_compensated",
+      "fit_status": "estimated_unvalidated",
+      "validation_status": "prediction_check_passed",
+      "Rs_ohm": 0.699874732352412,
+      "Ld_H": 0.0039999319212895759,
+      "Lq_H": 0.0059996245085427681,
+      "flux_Wb": 0.030000487952510913,
+      "Rs_error_percent": -0.017895378226844602,
+      "Ld_error_percent": -0.0017019677606058131,
+      "Lq_error_percent": -0.0062581909538676067,
+      "flux_error_percent": 0.0016265083697143228,
+      "id_rmse_A": 0.00020926410024250418,
+      "iq_rmse_A": 0.00013822523882671089,
+      "rank": 4,
+      "scaled_condition": 2.0057057489840693
+    },
+    {
+      "scenario": "ffnn_with_noise",
+      "fit_status": "estimated_unvalidated",
+      "validation_status": "prediction_check_passed",
+      "Rs_ohm": 0.69993734640992766,
+      "Ld_H": 0.0039901685272032226,
+      "Lq_H": 0.0059862526689787353,
+      "flux_Wb": 0.030005663125549052,
+      "Rs_error_percent": -0.008950512867470348,
+      "Ld_error_percent": -0.24578681991943746,
+      "Lq_error_percent": -0.22912218368774673,
+      "flux_error_percent": 0.018877085163510981,
+      "id_rmse_A": 0.005118840998065889,
+      "iq_rmse_A": 0.005237877280482031,
+      "rank": 4,
+      "scaled_condition": 2.0044964739745303
+    },
+    {
+      "scenario": "stale_calibration",
+      "fit_status": "estimated_unvalidated",
+      "validation_status": "prediction_check_failed",
+      "Rs_ohm": 0.8107281215860237,
+      "Ld_H": 0.0040248323915855182,
+      "Lq_H": 0.0061110844245842681,
+      "flux_Wb": 0.029844339403061079,
+      "Rs_error_percent": 15.818303083717678,
+      "Ld_error_percent": 0.620809789637954,
+      "Lq_error_percent": 1.8514070764044654,
+      "flux_error_percent": -0.51886865646306779,
+      "id_rmse_A": 0.065078820309553531,
+      "iq_rmse_A": 0.030799776238399731,
+      "rank": 4,
+      "scaled_condition": 2.0327090247744941
+    }
+  ],
+  "checks": {
+    "calibrationHoldoutBelow10mV": true,
+    "idealParameterErrorBelowPoint2Percent": true,
+    "oracleParameterErrorBelowPoint2Percent": true,
+    "compensatedErrorBelow1Percent": true,
+    "compensationImprovesMaxErrorTenfold": true,
+    "compensatedHoldoutBelow20mA": true,
+    "noisyCompensatedErrorBelow3Percent": true,
+    "staleCalibrationDegradesError": true,
+    "weakDataRejected": true,
+    "halvedSolverStepDifferenceBelowPoint1mA": true
+  },
+  "allChecksPassed": true,
+  "weakExcitationStatus": "not_identifiable",
+  "halvedSolverStepRMSEAmps": [
+    6.6171951852282609E-13,
+    6.0269222488139894E-13
+  ],
+  "limits": "Synthetic electrical average-voltage bench with prescribed speed/angle. No switching inverter, FOC controller, saturation/thermal plant, paper replication or physical accuracy guarantee. FFNN corrects identification input voltage, not inverter gating."
+}

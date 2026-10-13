@@ -1,6 +1,6 @@
 ---
 name: identify-pmsm-parameters
-description: Identify PMSM or FOC brushless-motor electrical parameters from sampled voltage, current and electrical speed using MATLAB. Extract setup information with source evidence from supplied motor manuals; import board telemetry through portable PMI1 capture; audit units, timing and identifiability; estimate Rs, Ld/Lq and PM flux; validate on a separate experiment. Use for 电机参数辨识、实机采样接入、相电阻/电感/磁链估计. PI/TD3 tuning and standalone rotor-state observation are separate tasks.
+description: Identify PMSM or FOC brushless-motor electrical parameters from sampled voltage, current and electrical speed using MATLAB. Extract setup information from motor manuals; import portable PMI1 telemetry; audit timing and identifiability; estimate Rs, Ld/Lq and PM flux; validate separately. Includes an optional standard-block Simulink benchmark for voltage-compensation effects. Use for 电机参数辨识、实机采样接入、相电阻/电感/磁链估计. PI/TD3 tuning and standalone rotor-state observation are separate tasks.
 ---
 
 # 永磁电机参数辨识
@@ -50,11 +50,13 @@ pmsm_export(estimate,validation,resultFolder);
 
 没有数据时可运行 `pmsm_simulated_experiment`，结果必须标为“仿真验证”，不能称为用户电机辨识。MATLAB 回归见 `tests/pmsmIdentificationTest.m` 和 `tests/pmsmCaptureIntegrationTest.m`；协议及接收器测试见 `tests/test_capture.py`。有用户或项目临时目录约定时，运行前将环境变量 `PMSM_SKILL_TMPDIR` 设为符合约定的任务目录。测试在该目录下创建独立子目录；未设置时使用系统临时目录。
 
+用户要求 Simulink 验证或比较电压误差补偿时，读 [仿真包说明](simulink/README.md)，使用 `simulink/pmsm_id_bench.slx` 和 `pmsm_run_simulink_benchmark`。需要 MATLAB、Simulink 与 JVM，标准模块即可。默认模型参数保存在模型工作区，运行器按情景显式覆盖；缓存遵守 `PMSM_SKILL_TMPDIR`，结果写新目录。先检查 10 项验证及失败案例，再报告误差与工况。FFNN 使用独立合成标定，不接真实硬件；不得把该网络直接当作任意逆变器的补偿。改模型时遵循可用的 Simulink 建模工具及库配置。
+
 ## 实验与扩展
 
 筛选用于实机扩展的先进算法时，优先读 [先进论文与实物实验核验](references/hardware-validated-papers.md)。区分已核对真实台架、只有摘要实验声明、纯仿真与硬件在环；记录电机/控制器、反馈与采样条件、参数误差基准和模型边界。不能把读过论文说成已在本项目复现，也不能把不同工况或编码器/无位置传感器结果混在一起比较。
 
-读取 [论文依据](references/literature.md) 后选扩展。静止多电平数据用于 Rs；已知轴向的动态数据用于 Ld/Lq；多速度/负载或开路反电势用于磁链。首版通过 `Fixed` 支持只估有信息支持的子集，没有内置激励或电压补偿。
+读取 [论文依据](references/literature.md) 后选扩展。静止多电平数据用于 Rs；已知轴向的动态数据用于 Ld/Lq；多速度/负载或开路反电势用于磁链。通过 `Fixed` 支持只估有信息支持的子集。实机自动激励和通用电压补偿尚未实现；仿真中的 FFNN 补偿仅用于可复现的原理验证。
 
 机械辨识需要可信转矩尺度、加减速和负载/摩擦假设。在线算法应在 MCU 或实时目标确定性执行。首版不发送串口/CAN 指令、不刷写固件、不启动电机。用户要求实机扩展时，先检查真实驱动协议和已授权实验范围，再实现可审查的采集与控制逻辑。
 

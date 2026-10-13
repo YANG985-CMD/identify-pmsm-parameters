@@ -36,8 +36,11 @@ AI 会先核对型号与版本，再整理型号、额定电压/电流/转速、
 | 独立验证 | 另一实验的连续 d/q 电流预测；阻止相同数字记录改名复用 |
 | 导出 | 参数 CSV、完整 MAT、诊断 JSON、实测与预测电流 CSV |
 | 通用实机接入 | C99 PMI1 板端编码、Python 串口接收/文件回放、采集包完整性检查 |
+| Simulink 验证 | 标准模块电气模型，比较指令电压、独立标定 FFNN 补偿、噪声与标定漂移 |
 
 已在 **MATLAB R2024b** 验证，使用基础 MATLAB 与 JVM。尚未验证其他 MATLAB 版本。采集工具要求 Python 3.10+；离线回放仅需标准库，实时串口另需 pySerial。C 编码器要求 8 位字节与 IEEE-754 binary32；不绑定某个 MCU HAL。
+
+可选的仿真包另外需要 **Simulink**，使用标准模块，无需自定义库、Simscape、Motor Control Blockset 或 Deep Learning Toolbox。
 
 ## 通用实物接入
 
@@ -130,6 +133,25 @@ python -B tests/test_capture.py -v
 测试通过代表合成模型与程序行为验证，不能代替真实电机实验。
 
 测试文件使用环境变量 `PMSM_SKILL_TMPDIR` 指定临时根目录；未设置时使用 MATLAB `tempdir`。如果用户或项目规定了临时文件位置，运行前必须设置该变量。每次文件测试只清理其独立子目录中的已知输出。
+
+## 可直接运行的 Simulink 仿真
+
+模型为 [pmsm_id_bench.slx](simulink/pmsm_id_bench.slx)，已嵌入默认参数，打开后可以直接运行。完整比较在仓库根目录执行：
+
+```matlab
+addpath(fullfile(pwd,'simulink'));
+% Set PMSM_SKILL_TMPDIR first if your project specifies a temporary directory.
+report = pmsm_run_simulink_benchmark(fullfile(pwd,'output','benchmark_demo'));
+assert(report.allChecksPassed);
+```
+
+输出目录必须尚不存在，防止覆盖已有结果。运行器会生成结果表、JSON、原始仿真 MAT 和对比图；缓存写入 `PMSM_SKILL_TMPDIR`，未指定时使用系统临时目录。
+
+R2024b 本地比较中，未补偿时 Rs 相对误差约 **37.913%**，独立标定 FFNN 补偿后约 **−0.0179%**；加入 5 mA 电流和 5 mV 电压噪声后，四参数最大绝对相对误差约 **0.246%**。标定漂移案例未通过独立电流预测检查，无激励案例被拒绝；共 **10/10 项仿真检查通过**。
+
+![仿真对比结果](simulink/reference-results/benchmark-comparison.png)
+
+模型、假设、论文思路对应关系、六组完整结果及复现方式见 [仿真说明](simulink/README.md)。这是固定参数、给定速度/角度的平均电压电气仿真；数值不代表论文复现精度或实物精度。FFNN 示例用于离线辨识输入电压补偿，尚未实现在线注入、无位置传感器控制或自动实机标定。
 
 ## 实现范围与论文
 
