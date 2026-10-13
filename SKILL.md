@@ -1,11 +1,11 @@
 ---
 name: identify-pmsm-parameters
-description: Identify PMSM or FOC brushless-motor electrical parameters from sampled voltage, current and electrical speed using MATLAB. Audit units, timing and identifiability; estimate Rs, Ld/Lq and PM flux; validate on a separate experiment and export traceable candidates. Use for 电机参数辨识、参数识别、相电阻/电感/磁链估计. PI/TD3 tuning and standalone rotor-state observation are separate tasks.
+description: Identify PMSM or FOC brushless-motor electrical parameters from sampled voltage, current and electrical speed using MATLAB. Import coherent board telemetry through portable PMI1 capture; audit units, timing and identifiability; estimate Rs, Ld/Lq and PM flux; validate on a separate experiment. Use for 电机参数辨识、实机采样接入、相电阻/电感/磁链估计. PI/TD3 tuning and standalone rotor-state observation are separate tasks.
 ---
 
 # 永磁电机参数辨识
 
-将真实采样或明确标记的仿真数据转成可审查的参数候选。第一版包含 MATLAB 离线电气辨识与独立电流预测验证，已在 R2024b 测试，使用基础 MATLAB 与 JVM。在线 RLS/EKF、机械 J/B 辨识、板端实验控制尚未实现；需要这些模式时按参考文献设计扩展，不能把离线程序描述成在线功能。
+将真实采样或明确标记的仿真数据转成可审查的参数候选。包含 MATLAB 离线电气辨识、独立电流预测验证，以及不依赖特定 HAL 的 PMI1 板端编码/上位机接收接口。MATLAB 使用基础功能与 JVM，已在 R2024b 测试。在线 RLS/EKF、机械 J/B 辨识、板端自动实验控制尚未实现；通用接口不表示已在某块板卡上通过实测。
 
 ## 数据与适用性
 
@@ -17,6 +17,10 @@ description: Identify PMSM or FOC brushless-motor electrical parameters from sam
 - 只有速度环日志时，说明不能据此辨识完整电参数，并提出补采信号。FOC 不保证反电势正弦，需检查常参数 dq 模型适用性。
 
 ## 计算、验证与交付
+
+需要接实物或已有板端原始记录时，先读 [通用实机数据接入](references/hardware-integration.md)。现有 SI dq CSV 可直接辨识；新板可适配 `firmware/pmsm_capture.h/.c`，用 `scripts/pmsm_capture.py decode` 回放或 `serial` 限时接收，再用 `pmsm_identify_capture` 核对记录哈希并运行完整辨识/独立验证。Python 离线解码仅需标准库，串口接收另需 pySerial。
+
+运行串口接收前先取得现有采集授权并核对端口、DTR/RTS 的板级影响。接收程序不发电机命令，结束接收也不会停止电机。不要把未知固件当成已实现 PMI1，不能猜换算系数、电压来源或位置零点。当前没有内置 CAN 接收/重组适配。
 
 读取 [算法及失败处理](references/algorithms.md)。实际参数必须由 MATLAB 计算，不能用铭牌或语言推断冒充辨识结果。
 
@@ -42,7 +46,7 @@ validation = pmsm_validate_electrical(estimate,holdoutData,holdoutMeta);
 pmsm_export(estimate,validation,resultFolder);
 ```
 
-没有数据时可运行 `pmsm_simulated_experiment`，结果必须标为“仿真验证”，不能称为用户电机辨识。可复验 `tests/pmsmIdentificationTest.m`；有用户或项目临时目录约定时，运行前将环境变量 `PMSM_SKILL_TMPDIR` 设为符合约定的任务目录。测试在该目录下创建独立子目录；未设置时使用 MATLAB `tempdir`。
+没有数据时可运行 `pmsm_simulated_experiment`，结果必须标为“仿真验证”，不能称为用户电机辨识。MATLAB 回归见 `tests/pmsmIdentificationTest.m` 和 `tests/pmsmCaptureIntegrationTest.m`；协议及接收器测试见 `tests/test_capture.py`。有用户或项目临时目录约定时，运行前将环境变量 `PMSM_SKILL_TMPDIR` 设为符合约定的任务目录。测试在该目录下创建独立子目录；未设置时使用系统临时目录。
 
 ## 实验与扩展
 

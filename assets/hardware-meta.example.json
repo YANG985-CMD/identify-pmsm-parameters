@@ -1,0 +1,22 @@
+{
+  "experiment_id": "replace-with-unique-experiment-id",
+  "source_kind": "measurement",
+  "dq_convention": "amplitude_invariant",
+  "speed_kind": "electrical",
+  "d_axis": "pm_flux",
+  "angle_source": null,
+  "voltage_source": null,
+  "time_alignment": "unverified",
+  "units": {"t": "s", "id": "A", "iq": "A", "ud": "V", "uq": "V", "omega_e": "rad/s"},
+  "hardware": {
+    "board": null,
+    "firmware_revision": null,
+    "motor": null,
+    "pole_pairs": null,
+    "sampling_period_us": null,
+    "current_calibration": null,
+    "voltage_reconstruction": null,
+    "angle_zero_and_phase_order": null,
+    "timing_alignment_evidence": null
+  }
+}

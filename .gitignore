@@ -7,6 +7,10 @@ slprj/
 codegen/
 results/
 output/
+captures/
+*.bin
+*.exe
+*.o
 .DS_Store
 Thumbs.db
 .env
