@@ -1,10 +1,31 @@
-# 标准模块 PMSM 参数辨识仿真
+# 永磁电机参数辨识 Skill：Simulink 仿真
 
-验证日期：2026-10-13；实际运行环境：MATLAB / Simulink R2024b。模型为 [pmsm_id_bench.slx](pmsm_id_bench.slx)，仅使用标准 Simulink 模块；FFNN 的训练和推理采用基础 MATLAB 数组运算。无需自定义模块库、Simscape、Motor Control Blockset、Deep Learning Toolbox 或 Embedded Coder。其他版本尚未验证。
+## 1. Skill 介绍
 
-这套仿真回答：当 dq 指令电压与电机实际电压不一致时，同一个四参数辨识算法会受到多大影响；使用独立电压误差标定后能否改善，并能否识别标定漂移和信息不足。
+`identify-pmsm-parameters` 是一个供 Codex / AI 助手调用的 PMSM 参数辨识 Skill。使用者提供电机手册或采样记录后，AI 可以提取配置资料，核对电压、电流、角度与采样时序，并调用 MATLAB 估计定子电阻 Rs、d/q 轴电感 Ld/Lq 和永磁磁链 psi_f，用另一组实验预测电流，输出参数、诊断与验证结果。
 
-## 运行方式
+本目录是这个 Skill 的仿真部分，帮助使用者在接实物前了解辨识流程、检查算法，并比较电压误差补偿的效果。完整 Skill 的安装、手册读取和实物采样方式见 [仓库首页](../README.md)，AI 工作入口见 [SKILL.md](../SKILL.md)。
+
+| 仿真能力 | 可以观察和检查的内容 |
+|---|---|
+| 标准模块电机模型 | PMSM dq 电气动态、同步电流和电压采样 |
+| 逆变器电压误差 | 指令电压偏离实际电压后，对参数估计的影响 |
+| 独立标定 FFNN 补偿 | 从相电流预测电压误差，修正离线辨识输入 |
+| 对比与失败检查 | 理想、未补偿、真实电压对照、补偿、噪声、标定漂移和无激励案例 |
+| 可复现输出 | 参数表、诊断 JSON、原始 MAT、标定网络与图表 |
+
+## 2. 参考文献
+
+1. Xiang, F., Zhou, Z., & Wang, Z. (2026). **Online Parameter Identification for Sensorless PMSM Drives with Inverter Nonlinearity Compensation.** *Electronics*, 15(12), 2722. [DOI](https://doi.org/10.3390/electronics15122722)。本仿真参考其小型 FFNN 电压补偿思路；该论文真实 STM32F407 台架的核验记录见 [实物实验核验](../references/hardware-validated-papers.md)。
+2. Zhu, Z. Q., Liang, D., & Liu, K. (2021). **Online Parameter Estimation for Permanent Magnet Synchronous Machines: An Overview.** *IEEE Access*, 9, 59059–59084. [DOI](https://doi.org/10.1109/ACCESS.2021.3072959)。参数辨识、可辨识性与误差来源综述。
+3. Boileau, T., et al. (2011). **Online Identification of PMSM Parameters: Parameter Identifiability and Estimator Comparative Study.** *IEEE Transactions on Industry Applications*, 47(4), 1944–1957. [DOI](https://doi.org/10.1109/TIA.2011.2155010)。可辨识性研究参考，阅读层次见 [论文依据](../references/literature.md)。
+4. He, S., et al. (2026). **Online Multi-Parameter Identification for PMSM Parameter Monitoring Based on a ZOH Model and Dual-Sampling Strategy.** *Sensors*, 26(3), 1072. [DOI](https://doi.org/10.3390/s26031072)。数字采样时序与后续在线辨识的研究参考，当前仿真未实现其双采样 / FFRLS 流程。
+
+完整 **17 篇题录**见 [BibTeX](../references/references.bib)。本包独立编写小型网络和标准模块电气模型，参数辨识调用现有离线积分回归。原论文中的高频注入、在线辨识和无位置传感器控制属于后续复现范围。
+
+## 3. 运行环境与使用方法
+
+已验证环境为 **MATLAB / Simulink R2024b**。模型 [pmsm_id_bench.slx](pmsm_id_bench.slx) 仅使用标准 Simulink 模块；FFNN 的训练和推理采用基础 MATLAB 数组运算。无需自定义模块库、Simscape、Motor Control Blockset、Deep Learning Toolbox 或 Embedded Coder。其他版本尚未验证。
 
 MATLAB 当前目录设为仓库根目录。查看并直接运行默认模型：
 
@@ -36,7 +57,7 @@ assert(report.allChecksPassed);
 
 仓库保存轻量参考结果与图，原始 MAT 在本地运行时生成，默认不纳入 Git。
 
-## 模型与信号
+## 4. 模型结构、信号与参数
 
 ![模型总览](reference-results/model-overview.png)
 
@@ -74,7 +95,7 @@ $$
 
 默认配置在 [pmsm_bench_defaults.m](pmsm_bench_defaults.m)，运行器用 SimulationInput 覆盖各情景的模型工作区参数。只修改默认函数不会自动改动已保存模型的默认工作区；通过运行器或 `pmsm_simulate_bench` 执行时会使用传入的配置。
 
-## FFNN 标定与辨识
+## 5. FFNN 标定与参数辨识
 
 标定使用另外生成的 81 个相电流—电压误差点，覆盖 −8 至 +8 A，零点附近更密，加入 1 mV 标准差噪声。单输入、5 个 tanh 隐藏单元、单输出网络采用 Adam 训练；固定随机种子、3 次初始权重重启。训练不使用电机 Rs/Ld/Lq/磁链真值或辨识误差作为标签。
 
@@ -84,7 +105,7 @@ $$
 
 参数计算仍调用仓库原有的 `pmsm_identify_electrical` 积分加权最小二乘。真值只用于事后计算仿真误差，只有 `actual_voltage_oracle` 对照行会直接使用电机端真实仿真电压；这行用于诊断算法，不代表实机可取得同等电压质量。
 
-## 已运行的六组结果
+## 6. 仿真对比与结果解读
 
 参数列为有符号相对误差百分数，电流列为另一组激励的 d/q 电流 RMSE。真值如上表。完整精度见 [CSV](reference-results/benchmark_summary.csv) 和 [JSON](reference-results/benchmark.json)。
 
@@ -107,11 +128,7 @@ $$
 
 原有 MATLAB 的 **28 项测试通过**。辨识结果仍保留候选状态，独立预测状态单独报告；不自动作为控制器参数。
 
-## 与论文的对应关系及范围
-
-FFNN 电压误差补偿思路参考 Xiang、Zhou、Wang，*Online Parameter Identification for Sensorless PMSM Drives with Inverter Nonlinearity Compensation*，Electronics 2026，15(12), 2722，[出版方原文](https://www.mdpi.com/2079-9292/15/12/2722)。其真实 STM32F407 台架的核验记录见 [先进论文清单](../references/hardware-validated-papers.md)。
-
-原论文结合高频 d 轴注入、在线 Rs/Ld 辨识和无位置传感器控制。本包独立编写了小型网络和标准模块电气模型，用已有离线四参数基线检查补偿原理。它没有复现论文的完整控制流程，也没有对不同论文算法作优劣排名。
+## 7. 适用范围与实物应用
 
 当前范围是固定参数、给定速度/角度的平均电压电气模型。尚未覆盖机械负载闭环、FOC 控制器、PWM 开关、ADC 延时/量化、角度估计误差、磁饱和、交叉饱和、热漂移或 MCU 执行时间。加入噪声的一行是一个指定噪声水平下的单次实验，不能据此声称所有噪声条件都鲁棒。
 
