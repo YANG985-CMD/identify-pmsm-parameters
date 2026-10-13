@@ -1,0 +1,4 @@
+interface:
+  display_name: "永磁电机参数辨识"
+  short_description: "用 MATLAB 辨识永磁电机参数，检查采样质量、可辨识性与独立验证结果"
+  default_prompt: "使用 $identify-pmsm-parameters 检查我的电机采样数据，辨识可被数据支持的参数，并给出独立验证结果。"

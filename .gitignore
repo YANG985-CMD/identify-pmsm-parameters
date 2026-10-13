@@ -1,0 +1,15 @@
+*.asv
+*.m~
+*.mex*
+*.slxc
+*.mat
+slprj/
+codegen/
+results/
+output/
+.DS_Store
+Thumbs.db
+.env
+.env.*
+__pycache__/
+*.pyc

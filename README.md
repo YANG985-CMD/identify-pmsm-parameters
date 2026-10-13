@@ -1,0 +1,97 @@
+# 永磁电机参数辨识 Skill
+
+A Codex skill for offline PMSM electrical parameter identification and independent current-prediction validation in MATLAB.
+
+从同步采样的电压、电流和电角速度估计永磁同步电机的电气参数，检查数据质量与可辨识性，并用另一组实验预测电流。适用于 PMSM，以及满足常参数 dq 模型假设、采用 FOC 的无刷电机。
+
+## 功能
+
+| 功能 | 第一版实现 |
+|---|---|
+| 参数估计 | Rs、Ld、Lq、永磁磁链 psi_f；IPMSM 或等电感 SPMSM |
+| 算法 | 离线积分加权最小二乘，可固定有依据的先验参数 |
+| 输入 | MATLAB table、CSV、包含 data table 的 MAT |
+| 数据检查 | 单位声明、时间顺序、无效值、饱和、间断、实验段边界 |
+| 可辨识性 | 回归矩阵秩与归一化条件数；信息不足时报告失败状态 |
+| 独立验证 | 另一实验的连续 d/q 电流预测；阻止相同数字记录改名复用 |
+| 导出 | 参数 CSV、完整 MAT、诊断 JSON、实测与预测电流 CSV |
+
+已在 **MATLAB R2024b** 验证，使用基础 MATLAB 与 JVM。尚未验证其他 MATLAB 版本。
+
+## 安装到 Codex
+
+将整个仓库放入 Codex 的 skills 目录，文件夹名保持 `identify-pmsm-parameters`。默认目录下可运行：
+
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/YANG985-CMD/identify-pmsm-parameters.git "$env:USERPROFILE\.codex\skills\identify-pmsm-parameters"
+```
+
+macOS / Linux：
+
+```sh
+git clone https://github.com/YANG985-CMD/identify-pmsm-parameters.git ~/.codex/skills/identify-pmsm-parameters
+```
+
+如果已设置自定义 `CODEX_HOME`，请安装到该目录下的 `skills`。已有同名安装时先检查其本地改动，再选择更新方式。
+
+调用示例：
+
+> 使用 $identify-pmsm-parameters 检查这份电机采样，辨识电阻、电感和磁链，并用另一组实验验证。
+
+## 输入要求
+
+必须有同步的 `t, id, iq, ud, uq, omega_e`：时间 s、电流 A、电压 V、电角速度 rad/s。坐标系为幅值不变 dq，d 轴沿永磁磁链。
+
+元数据必须说明实验 ID、实测或仿真、单位、电压与角度来源、时间对齐情况。完整字段和可选标志见 [数据约定](references/data-contract.md)。只有转速或速度环 PI 日志不足以识别完整电气参数。
+
+## MATLAB 合成示例
+
+将 MATLAB 当前目录切换到仓库根目录，运行：
+
+```matlab
+previousPath = path;
+pathCleanup = onCleanup(@() path(previousPath));
+addpath(fullfile(pwd,'scripts'));
+
+[trainData,trainMeta,truth] = pmsm_simulated_experiment();
+[holdoutData,holdoutMeta] = pmsm_simulated_experiment( ...
+    ExperimentID="synthetic-holdout",Phase=0.8);
+
+estimate = pmsm_identify_electrical(trainData,trainMeta, ...
+    Model="ipmsm",WindowSamples=10);
+disp(estimate.status);
+disp(estimate.parameters);
+
+% 0.01 A is a synthetic-test criterion, not a real-motor accuracy claim.
+validation = pmsm_validate_electrical(estimate,holdoutData,holdoutMeta, ...
+    MaxRMSE=[0.01,0.01]);
+disp(validation.status);
+disp(validation.rmseAmps);
+
+clear pathCleanup
+```
+
+真实数据的验收阈值应有控制需求或测量精度依据；不设置 `MaxRMSE` 时只报告预测指标。导出方式及失败状态见 [算法说明](references/algorithms.md)。
+
+## 运行测试
+
+在 MATLAB 的仓库根目录运行：
+
+```matlab
+testResults = runtests(fullfile(pwd,'tests','pmsmIdentificationTest.m'));
+assertSuccess(testResults);
+```
+
+测试包含 22 项，覆盖参数恢复、噪声、不可辨识工况、错误输入、实验边界、独立预测、数据复用检查和文件导出。测试通过代表合成模型与程序行为验证，不能代替真实电机实验。
+
+测试文件使用环境变量 `PMSM_SKILL_TMPDIR` 指定临时根目录；未设置时使用 MATLAB `tempdir`。如果用户或项目规定了临时文件位置，运行前必须设置该变量。每次文件测试只清理其独立子目录中的已知输出。
+
+## 实现范围与论文
+
+第一版尚未实现在线 RLS/EKF、机械 J/B 辨识、自动死区补偿、磁饱和图、串口/CAN 控制或自动实机实验；不会启动电机或刷写固件。预测通过不证明参数真值精度，元数据检查也不能证明传感器校准正确。
+
+本实现是独立编写的积分最小二乘基线。论文阅读层次、适用条件与扩展建议见 [论文依据](references/literature.md)，10 篇题录见 [BibTeX](references/references.bib)。仓库不包含论文原文、用户实测数据或账户配置。
+
+Skill 入口见 [SKILL.md](SKILL.md)。
