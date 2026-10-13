@@ -21,7 +21,7 @@
 3. Boileau, T., et al. (2011). **Online Identification of PMSM Parameters: Parameter Identifiability and Estimator Comparative Study.** *IEEE Transactions on Industry Applications*, 47(4), 1944–1957. [DOI](https://doi.org/10.1109/TIA.2011.2155010)。可辨识性研究参考，阅读层次见 [论文依据](../references/literature.md)。
 4. He, S., et al. (2026). **Online Multi-Parameter Identification for PMSM Parameter Monitoring Based on a ZOH Model and Dual-Sampling Strategy.** *Sensors*, 26(3), 1072. [DOI](https://doi.org/10.3390/s26031072)。数字采样时序与后续在线辨识的研究参考，当前仿真未实现其双采样 / FFRLS 流程。
 
-完整 **17 篇题录**见 [BibTeX](../references/references.bib)。本包独立编写小型网络和标准模块电气模型，参数辨识调用现有离线积分回归。原论文中的高频注入、在线辨识和无位置传感器控制属于后续复现范围。
+完整 **19 篇题录**见 [BibTeX](../references/references.bib)。本包独立编写小型网络和标准模块电气模型，参数辨识调用离线积分回归。原论文中的高频注入、在线辨识和无位置传感器控制属于后续复现范围。
 
 ## 3. 运行环境与使用方法
 
@@ -130,6 +130,6 @@ $$
 
 ## 7. 适用范围与实物应用
 
-当前范围是固定参数、给定速度/角度的平均电压电气模型。尚未覆盖机械负载闭环、FOC 控制器、PWM 开关、ADC 延时/量化、角度估计误差、磁饱和、交叉饱和、热漂移或 MCU 执行时间。加入噪声的一行是一个指定噪声水平下的单次实验，不能据此声称所有噪声条件都鲁棒。
+此电气台架是固定参数、给定速度/角度的平均电压电气模型，未覆盖机械负载闭环、FOC 控制器、PWM 开关、ADC 延时/量化、角度估计误差、磁饱和、交叉饱和、热漂移或 MCU 执行时间。新增的 J/B/Tc 与转矩产生转速的仿真位于 [独立机械台架](mechanical-README.md)。加入噪声的一行是指定噪声水平下的单次实验，不能据此声称所有噪声条件都鲁棒。
 
 实物应用的下一步是用实际逆变器标定替换合成标定，接入已核对的同步采样，保留独立实验和物理参数对照，再逐项增加时序、位置误差和闭环控制验证。

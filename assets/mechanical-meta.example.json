@@ -1,0 +1,16 @@
+{
+  "experiment_id": "replace-with-traceable-experiment-id",
+  "configuration_id": "replace-with-motor-attachments-and-gear-id",
+  "source_kind": "measurement",
+  "experiment_type": "mechanical_dynamic",
+  "torque_source": "unknown",
+  "torque_scale_evidence": "",
+  "speed_source": "unknown",
+  "time_alignment": "unverified",
+  "shaft_reference": "motor",
+  "inertia_scope": "unknown",
+  "load_model": "unknown",
+  "friction_model": "unknown",
+  "units": {"t": "s", "omega_m": "rad/s", "torque_e": "N*m", "load_torque": "N*m"},
+  "source_evidence": []
+}

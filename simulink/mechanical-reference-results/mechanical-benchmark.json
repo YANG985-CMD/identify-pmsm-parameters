@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "synthetic_pmsm_mechanical_benchmark",
+  "generatedAtUTC": "2026-10-13T10:59:22Z",
+  "matlabVersion": "24.2.0.2712019 (R2024b)",
+  "modelSHA256": "b9ea6f7268b7ac8654631e6d8ffa2a92d3b0d0ecffe35b82880808049967cc57",
+  "bench": {
+    "J": 0.002,
+    "B": 0.001,
+    "Tc": 0.02,
+    "FrictionSpeed": 0.2,
+    "QuadraticFriction": 0,
+    "PolePairs": 3,
+    "Flux": 0.03,
+    "Ld": 0.004,
+    "Lq": 0.006,
+    "CurrentTimeConstant": 0.002,
+    "SpeedLoopEnabled": 1,
+    "Kp": 0.2,
+    "Ki": 0.3,
+    "CurrentLimit": 6,
+    "InitialPI": 0,
+    "InitialId": 0,
+    "InitialIq": 0,
+    "InitialSpeed": 35,
+    "SolverStep": 0.0001,
+    "SamplePeriod": 0.001,
+    "StopTime": 3
+  },
+  "cases": [
+    {
+      "scenario": "ideal",
+      "J_kg_m2": 0.0019999381868020991,
+      "B_Nm_s_rad": 0.00099998564185580581,
+      "Tc_Nm": 0.020000292227275219,
+      "J_error_percent": -0.0030906598950464562,
+      "B_error_percent": -0.001435814419420943,
+      "Tc_error_percent": 0.0014611363760921869,
+      "speed_rmse_rad_s": 0.0011446320170017071,
+      "prediction_status": "prediction_check_passed"
+    },
+    {
+      "scenario": "measurement_noise",
+      "J_kg_m2": 0.0019960120349267444,
+      "B_Nm_s_rad": 0.0010000193723574671,
+      "Tc_Nm": 0.019998907955742613,
+      "J_error_percent": -0.1993982536627843,
+      "B_error_percent": 0.0019372357467099463,
+      "Tc_error_percent": -0.0054602212869354905,
+      "speed_rmse_rad_s": 0.021374843181634639,
+      "prediction_status": "prediction_check_passed"
+    },
+    {
+      "scenario": "constant_unknown_load",
+      "J_kg_m2": 0.0019999233125415142,
+      "B_Nm_s_rad": 0.00099998564185580581,
+      "Tc_Nm": 0.020000292227275219,
+      "J_error_percent": -0.0038343729242933111,
+      "B_error_percent": -0.001435814419420943,
+      "Tc_error_percent": 0.0014611363760921869,
+      "speed_rmse_rad_s": 0.000988034847138095,
+      "prediction_status": "prediction_check_passed"
+    },
+    {
+      "scenario": "measured_varying_load",
+      "J_kg_m2": 0.0019999351359031689,
+      "B_Nm_s_rad": 0.00099998564185580581,
+      "Tc_Nm": 0.020000292227275219,
+      "J_error_percent": -0.0032432048415560397,
+      "B_error_percent": -0.001435814419420943,
+      "Tc_error_percent": 0.0014611363760921869,
+      "speed_rmse_rad_s": 0.0012916147158106006,
+      "prediction_status": "prediction_check_passed"
+    },
+    {
+      "scenario": "wrong_constant_load",
+      "J_kg_m2": 0.0016704248784952646,
+      "B_Nm_s_rad": 0.00099998564185580581,
+      "Tc_Nm": 0.020000292227275219,
+      "J_error_percent": -16.47875607523677,
+      "B_error_percent": -0.001435814419420943,
+      "Tc_error_percent": 0.0014611363760921869,
+      "speed_rmse_rad_s": 0.56372872628258131,
+      "prediction_status": "prediction_check_failed"
+    },
+    {
+      "scenario": "torque_scale_plus10percent",
+      "J_kg_m2": 0.002199932005482309,
+      "B_Nm_s_rad": 0.0010999842060413871,
+      "Tc_Nm": 0.022000321450002736,
+      "J_error_percent": 9.9966002741154476,
+      "B_error_percent": 9.9984206041387083,
+      "Tc_error_percent": 10.001607250013679,
+      "speed_rmse_rad_s": 0.0011410725969085598,
+      "prediction_status": "prediction_check_passed"
+    }
+  ],
+  "checks": {
+    "frictionRecoveryBelowPoint5Percent": true,
+    "inertiaRecoveryBelowPoint5Percent": true,
+    "independentSpeedBelowPoint1RadPerSec": true,
+    "noisyParametersBelow3Percent": true,
+    "constantUnknownLoadRecoveryBelowPoint5Percent": true,
+    "measuredVaryingLoadRecoveryBelowPoint5Percent": true,
+    "wrongLoadAssumptionFailsPrediction": true,
+    "commonTorqueScaleBiasExposed": true,
+    "steadySpeedCannotIdentifyJ": true,
+    "halfStepDifferenceBelowPoint01RadPerSec": true
+  },
+  "allChecksPassed": true,
+  "frictionParameters": {
+    "B": 0.00099998564185580581,
+    "Tc": 0.020000292227275219
+  },
+  "trainingConstantLoadEstimate": 0.029999233693208841,
+  "weakExcitationStatus": "not_identifiable",
+  "halfStepSpeedRMSEradPerSecond": 4.19271545757246E-11,
+  "noise": {
+    "speedStdRadPerSecond": 0.02,
+    "torqueStdNm": 0.0001,
+    "trainSeed": 31,
+    "holdoutSeed": 32
+  },
+  "predictionMaxRMSEradPerSecond": 0.1,
+  "windowSamples": 100,
+  "limitations": "Synthetic reduced FOC current response, PMSM electromagnetic torque and rigid-shaft mechanics. No switching inverter, physical tests or complete 2025-paper reproduction. B/Tc fitted separately. Common torque-scale bias can pass speed prediction."
+}

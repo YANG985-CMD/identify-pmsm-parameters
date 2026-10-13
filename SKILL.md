@@ -1,11 +1,13 @@
 ---
 name: identify-pmsm-parameters
-description: Identify PMSM or FOC brushless-motor electrical parameters from sampled voltage, current and electrical speed using MATLAB. Extract setup information from motor manuals; import portable PMI1 telemetry; audit timing and identifiability; estimate Rs, Ld/Lq and PM flux; validate separately. Includes an optional standard-block Simulink benchmark for voltage-compensation effects. Use for 电机参数辨识、实机采样接入、相电阻/电感/磁链估计. PI/TD3 tuning and standalone rotor-state observation are separate tasks.
+description: Identify PMSM or FOC brushless-motor electrical and mechanical parameters using MATLAB. Extract motor-manual information, import PMI1 telemetry, estimate Rs/Ld/Lq/PM flux or staged J/viscous B/Coulomb friction from credible torque and speed, and validate independent experiments. Includes standard-block electrical and mechanical Simulink benches. Use for 电机参数辨识、实机采样接入、电阻电感磁链、转动惯量与摩擦辨识. PI/TD3 tuning and standalone state observation are separate tasks.
 ---
 
 # 永磁电机参数辨识
 
-将真实采样或明确标记的仿真数据转成可审查的参数候选。包含 MATLAB 离线电气辨识、独立电流预测验证，以及不依赖特定 HAL 的 PMI1 板端编码/上位机接收接口。MATLAB 使用基础功能与 JVM，已在 R2024b 测试。在线 RLS/EKF、机械 J/B 辨识、板端自动实验控制尚未实现；通用接口不表示已在某块板卡上通过实测。
+将真实采样或明确标记的仿真数据转成可审查的参数候选。包含离线电气辨识、机械 J/B/Tc 分阶段辨识、独立电流/速度预测，以及不依赖特定 HAL 的 PMI1 采样接口。MATLAB 使用基础功能与 JVM，已在 R2024b 测试。在线 RLS/EKF、非线性摩擦观测器和板端自动实验控制尚未实现；通用接口不表示已在某块板卡上通过实测。
+
+用户要求转动惯量 J、机械摩擦 B/Tc 或速度预测时，先读 [机械辨识](references/mechanical-identification.md)，使用下文机械路线；电气参数请求使用 dq 电气路线。只有速度信号不能自动得出绝对 J/B。
 
 ## 数据与适用性
 
@@ -53,6 +55,16 @@ pmsm_export(estimate,validation,resultFolder);
 用户要求 Simulink 验证或比较电压误差补偿时，读 [仿真包说明](simulink/README.md)，使用 `simulink/pmsm_id_bench.slx` 和 `pmsm_run_simulink_benchmark`。需要 MATLAB、Simulink 与 JVM，标准模块即可。默认模型参数保存在模型工作区，运行器按情景显式覆盖；缓存遵守 `PMSM_SKILL_TMPDIR`，结果写新目录。先检查 10 项验证及失败案例，再报告误差与工况。FFNN 使用独立合成标定，不接真实硬件；不得把该网络直接当作任意逆变器的补偿。改模型时遵循可用的 Simulink 建模工具及库配置。
 
 ## 实验与扩展
+
+### 机械参数 J、B 和 Tc
+
+机械输入为 `t, omega_m, torque_e`，有实测负载时再加 `load_torque`。核对转矩尺度、机械速度单位、负载状态、配置 ID 和惯量范围；B 是黏性摩擦，不表示所有阻力。用 `pmsm_identify_friction` 从已知负载的多速度稳速段得到 B/Tc，再用 `pmsm_identify_mechanical` 在另一加减速记录积分拟合 J。动态负载已知时直接扣除；明确未知恒定负载时可同时估一个训练负载常数，不支持任意未知变化负载。
+
+已有 dq / PMI1 table 可经 `pmsm_mechanical_from_dq` 用可信极对数与电气候选计算 Te/机械速度，保留磁阻转矩、无效边界和尺度来源。电气参数的误差会传播，不能把指令电流/指令转矩或输出轴传感器读数未经力矩平衡直接当成 Te。
+
+用第三组已知负载实验执行 `pmsm_validate_mechanical`，速度误差阈值单位 rad/s，未提供时只报告指标。分别审查摩擦段与 J 的秩/条件数、速度变化和预测；共同转矩尺度错误可能预测通过，仍需校准证据。`pmsm_export_mechanical` 导出新目录，明确转子惯量或包含附件/负载的总惯量。不自动写 PI 参数或执行实机激励。
+
+机械仿真读 [机械台架说明](simulink/mechanical-README.md)，运行 `pmsm_run_mechanical_benchmark`。模型含电流状态、PMSM 转矩、J/B/Tc 和速度/角度状态，转速由转矩产生；只用标准模块。它是简化电流环的刚性轴仿真，没有完整开关或高级论文观测器。回归在 `tests/pmsmMechanicalTest.m`。
 
 筛选用于实机扩展的先进算法时，优先读 [先进论文与实物实验核验](references/hardware-validated-papers.md)。区分已核对真实台架、只有摘要实验声明、纯仿真与硬件在环；记录电机/控制器、反馈与采样条件、参数误差基准和模型边界。不能把读过论文说成已在本项目复现，也不能把不同工况或编码器/无位置传感器结果混在一起比较。
 

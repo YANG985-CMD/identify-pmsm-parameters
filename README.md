@@ -6,14 +6,18 @@
 
 使用者可以先提供电机手册，让 AI 提取型号、额定值、极对数和反馈信息；已有实验数据时，Skill 会核对单位、坐标系和采样时序，计算定子电阻 Rs、d/q 轴电感 Ld/Lq、永磁磁链 psi_f，再用另一组实验预测电流，输出参数、诊断和验证报告。
 
+现在也支持**机械参数 J、黏性摩擦 B 和库仑摩擦 Tc**：用多速度稳速试验先识别摩擦，再用另一组加减速数据识别惯量，最后用第三组实验预测速度。支持已知负载，或在动态辨识中拟合一个未知恒定负载；不能从任意未知变化负载下的数据保证唯一恢复 J/B。
+
 适用于 PMSM，以及满足常参数 dq 模型假设、采用 FOC 的无刷电机。没有实测数据时，可以使用随附的标准模块 Simulink 仿真，了解辨识流程和电压误差补偿的作用。
 
 | 能力 | 使用者可以得到什么 |
 |---|---|
 | 手册信息提取 | 带型号、单位、条件和来源页码的配置资料；缺项保持未知 |
 | 电气参数辨识 | Rs、Ld、Lq、psi_f 参数候选；支持独立电感或等电感模型 |
+| 机械参数辨识 | 轴侧 J、黏性 B、库仑摩擦 Tc；明确转子或带附件/负载总惯量 |
 | 数据与可辨识性检查 | 单位、时间、饱和、间断、矩阵秩与条件数诊断 |
 | 独立实验验证 | 另一组实验的 d/q 电流预测、误差指标和验收状态 |
+| 独立机械验证 | 第三组已知负载实验的速度预测、误差与负载假设诊断 |
 | 通用采样接入 | 可适配控制板的 PMI1 C 编码接口、Python 接收与回放工具 |
 | 仿真与结果导出 | 标准 Simulink 对比模型，以及 CSV、MAT、JSON 和图表 |
 
@@ -58,6 +62,27 @@ R2024b 本地比较中，未补偿时 Rs 相对误差约 **37.913%**，独立标
 
 模型、假设、论文思路对应关系、六组完整结果及复现方式见 [仿真说明](simulink/README.md)。这是固定参数、给定速度/角度的平均电压电气仿真；数值不代表论文复现精度或实物精度。FFNN 示例用于离线辨识输入电压补偿，尚未实现在线注入、无位置传感器控制或自动实机标定。
 
+### J/B/Tc 机械动态仿真
+
+新增 [pmsm_mechanical_bench.slx](simulink/pmsm_mechanical_bench.slx)，包含示例速度环、实际电流状态、永磁/磁阻转矩、转子惯量和摩擦。**转速通过机械方程计算**，模型内部有电机转矩与转子动态。只使用标准 Simulink 模块，按层展开并检查模块、文字和连线间距。
+
+![机械辨识顶层框架](simulink/mechanical-reference-results/model-overview.png)
+
+![惯量与机械摩擦内部框架](simulink/mechanical-reference-results/rotor-mechanics.png)
+
+```matlab
+addpath('scripts','simulink');
+setenv('PMSM_SKILL_TMPDIR','E:/simulink/_codex_tmp/pmsm-mechanical-example');
+mechanicalReport = pmsm_run_mechanical_benchmark('output/mechanics-001');
+assert(mechanicalReport.allChecksPassed);
+```
+
+六组对比与失败案例共 **10/10 项机械仿真检查通过**。理想 J 误差约 −0.00309%，加入 0.02 rad/s 速度噪声及 0.1 mN·m 转矩噪声后约 −0.1994%。把变化负载误当常数时 J 偏差约 −16.479%，独立速度预测失败；三组记录的转矩尺度共同偏差 10% 时，J/B/Tc 约同样偏差，速度预测仍可能通过。
+
+![机械参数辨识结果](simulink/mechanical-reference-results/mechanical-comparison.png)
+
+结果为本项目合成仿真，尚无新增实物测试。该台架采用简化电流环和刚性轴，完整设置、阈值、数据与模型哈希见 [机械仿真说明](simulink/mechanical-README.md)。真实实验的数据、转矩尺度和负载要求见 [机械辨识说明](references/mechanical-identification.md)。
+
 ## 3. 参考文献
 
 以下列出可辨识性、逆变器误差及先进辨识路线的主要参考。当前代码为独立编写的离线基线；仿真中的小型 FFNN 示例用于验证电压误差补偿思路。在线注入、观察器与硬件台架方案的实现情况见文末适用范围。
@@ -72,7 +97,11 @@ R2024b 本地比较中，未补偿时 Rs 相对误差约 **37.913%**，独立标
 8. Wang, P., Zhu, Z. Q., & Feng, Z. (2026). **Online Parameter Identification of SPMSMs Under Sensorless Control Cancelling Influence of Position Error With Torque Measurements.** *IET Electric Power Applications*, 20(1), e70185. [DOI](https://doi.org/10.1049/elp2.70185)。转矩辅助辨识，已核验真实发电机台架。
 9. Wang, P., & Zhu, Z. Q. (2026). **Overview of Online Parameter Identification of Permanent Magnet Synchronous Machines Under Sensorless Control.** *IEEE Access*, 14, 11582–11606. [DOI](https://doi.org/10.1109/ACCESS.2026.3655929)。无位置传感器辨识路线综述。
 
-完整 **17 篇题录**见 [BibTeX](references/references.bib)。各文献的阅读层次与用途见 [论文依据](references/literature.md)；5 篇已核验实物论文的平台、工况和限制见 [实物实验核验](references/hardware-validated-papers.md)。文献中的实物验证与本项目自身的验证分别记录。
+10. Jing, C., et al. (2021). **A Novel Moment of Inertia Identification Strategy for Permanent Magnet Motor System Based on Integral Chain Differentiator and Kalman Filter.** *Energies*, 14(1), 166. [DOI](https://doi.org/10.3390/en14010166)。6 kW PMSM 实验，分开 B/Tc 与 J 识别的依据；本项目没有复现其观测器。
+11. Liu, K., & Zhu, Z. Q. (2017). **Fast Determination of Moment of Inertia of Permanent Magnet Synchronous Machine Drives for Design of Speed Loop Regulator.** *IEEE TCST*, 25(5), 1816–1824. [DOI](https://doi.org/10.1109/TCST.2016.2615090)。真实电机与负载机实验，快速惯量辨识对照。
+12. Yang, C., et al. (2025). **Parameter-Tuning-Free Two-Step Identification of Mechanical Parameters for PMSM Drives.** *IEEE TIE*, 72(12), 12378–12392. [DOI](https://doi.org/10.1109/TIE.2025.3577312)。摘要报告 1.2 kW 实物验证，非线性摩擦和在线 J/负载估计，完整实验细节尚未复核。
+
+完整 **19 篇题录**见 [BibTeX](references/references.bib)。各文献的阅读层次与用途见 [论文依据](references/literature.md)；电气台架见 [实物实验核验](references/hardware-validated-papers.md)，机械论文及本实现对应关系见 [机械辨识](references/mechanical-identification.md)。文献中的实物验证与本项目自身验证分别记录。
 
 ## 4. 安装到 Codex
 
@@ -99,6 +128,10 @@ git clone https://github.com/YANG985-CMD/identify-pmsm-parameters.git ~/.codex/s
 调用示例：
 
 > 使用 $identify-pmsm-parameters 检查这份电机采样，辨识电阻、电感和磁链，并用另一组实验验证。
+
+机械辨识调用示例：
+
+> 使用 $identify-pmsm-parameters 检查我的稳速、加减速和独立验证三组记录，核对转矩尺度与负载，辨识 J、B 和库仑摩擦，并说明是转子惯量还是总惯量。
 
 ## 5. 先把电机手册交给 AI
 
@@ -190,7 +223,7 @@ testResults = runtests(fullfile(pwd,'tests'),'IncludeSubfolders',false);
 assertSuccess(testResults);
 ```
 
-MATLAB 包含 28 项测试，覆盖原有辨识功能，以及采集包完整性、失败记录拒绝和从采集包到导出的流程。协议/接收器另有 20 项 Python 测试（包括 C 编码交叉校验；该项需要先生成 C fixture）。两组本地测试均通过；没有打开真实串口或启动电机。
+MATLAB 包含 **55 项测试**：原有 28 项电气/采集回归，加上 27 项机械回归，覆盖 J/B/Tc 恢复、恒速不可辨识、单位/负载/时间错误、dq 转矩换算、独立预测和禁止覆盖导出。55 项本地测试全部通过。协议/接收器另有原先验证的 20 项 Python 测试（包括 C 编码交叉校验；该项需要先生成 C fixture）；本次没有改动协议或接收器，没有打开真实串口或启动电机。
 
 Python 测试：
 
@@ -206,7 +239,7 @@ python -B tests/test_capture.py -v
 
 ## 9. 当前适用范围
 
-当前提供离线电气参数辨识、通用采样接口和仿真验证。在线 RLS/EKF、机械 J/B 辨识、自动实机死区补偿、磁饱和图、控制器参数下发及自动实机实验尚未实现；采集接收结束也不会停止电机。
+当前提供离线电气参数辨识、机械 J/B/Tc 分阶段辨识、通用采样接口和仿真验证。机械输入需要可信电磁转矩、机械速度、动态工况与负载假设；已有 dq table 可用极对数和电气候选换算，细节见 [机械辨识](references/mechanical-identification.md)。在线 RLS/EKF、非线性摩擦观测器、自动实机死区补偿、磁饱和图、控制器参数下发及自动实机实验尚未实现；采集接收结束也不会停止电机。
 
 本项目已有软件与合成仿真验证，具体控制板和电机的物理验收仍需完成。预测通过不证明参数真值精度，元数据声明也不能证明传感器校准正确。实机验收还需要可信电压、位置与时序、适当激励，以及明确条件下的参数参考。
 
