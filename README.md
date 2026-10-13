@@ -135,6 +135,8 @@ python -B tests/test_capture.py -v
 
 尚未实现在线 RLS/EKF、机械 J/B 辨识、自动死区补偿、磁饱和图、电机控制指令或自动实机实验；采集接收结束也不会停止电机。预测通过不证明参数真值精度，元数据检查也不能证明传感器校准正确。
 
-本实现是独立编写的积分最小二乘基线。论文阅读层次、适用条件与扩展建议见 [论文依据](references/literature.md)，10 篇题录见 [BibTeX](references/references.bib)。仓库不包含论文原文、用户实测数据或账户配置。
+本实现是独立编写的积分最小二乘基线。论文阅读层次、适用条件与扩展建议见 [论文依据](references/literature.md)，17 篇题录见 [BibTeX](references/references.bib)。仓库不包含论文原文、用户实测数据或账户配置。
+
+新增 [2025–2026 年先进论文与实物实验核验](references/hardware-validated-papers.md)：5 篇已核对真实台架的论文，以及尚未核验实验章节的前沿候选。文献中的在线算法、注入和补偿属于扩展研究，当前代码没有因此自动具备这些功能。
 
 Skill 入口见 [SKILL.md](SKILL.md)。
