@@ -1,6 +1,6 @@
 ---
 name: identify-pmsm-parameters
-description: Identify PMSM or FOC brushless-motor electrical parameters from sampled voltage, current and electrical speed using MATLAB. Import coherent board telemetry through portable PMI1 capture; audit units, timing and identifiability; estimate Rs, Ld/Lq and PM flux; validate on a separate experiment. Use for 电机参数辨识、实机采样接入、相电阻/电感/磁链估计. PI/TD3 tuning and standalone rotor-state observation are separate tasks.
+description: Identify PMSM or FOC brushless-motor electrical parameters from sampled voltage, current and electrical speed using MATLAB. Extract setup information with source evidence from supplied motor manuals; import board telemetry through portable PMI1 capture; audit units, timing and identifiability; estimate Rs, Ld/Lq and PM flux; validate on a separate experiment. Use for 电机参数辨识、实机采样接入、相电阻/电感/磁链估计. PI/TD3 tuning and standalone rotor-state observation are separate tasks.
 ---
 
 # 永磁电机参数辨识
@@ -8,6 +8,8 @@ description: Identify PMSM or FOC brushless-motor electrical parameters from sam
 将真实采样或明确标记的仿真数据转成可审查的参数候选。包含 MATLAB 离线电气辨识、独立电流预测验证，以及不依赖特定 HAL 的 PMI1 板端编码/上位机接收接口。MATLAB 使用基础功能与 JVM，已在 R2024b 测试。在线 RLS/EKF、机械 J/B 辨识、板端自动实验控制尚未实现；通用接口不表示已在某块板卡上通过实测。
 
 ## 数据与适用性
+
+用户可以先提供电机手册、数据表或铭牌图片，无需先手填全部参数。有这些资料时读 [手册信息提取](references/manual-intake.md)，先核对具体型号/版本，提取参数、原始单位、条件与页码，输出“已找到、可明确换算、待补充”的信息表。可继续从已提供的控制板资料和本地固件提取接口配置，只追问影响接入或辨识的缺项与冲突。手册标称值保留为资料参考，不冒充辨识结果或实测校准；没有依据时不能填完整实验的电压来源、角度来源或时序已验证状态。
 
 读取 [数据约定](references/data-contract.md)。优先从已有文件、配置及项目代码确定电机类型、极对数、变换和单位、实际采样率、电压来源、角度来源、可用实验段。只追问影响可辨识性或实验路线的缺失信息。
 

@@ -8,6 +8,11 @@
   "voltage_source": null,
   "time_alignment": "unverified",
   "units": {"t": "s", "id": "A", "iq": "A", "ud": "V", "uq": "V", "omega_e": "rad/s"},
+  "documentation": {
+    "sources": [],
+    "parameter_evidence": [],
+    "unresolved": []
+  },
   "hardware": {
     "board": null,
     "firmware_revision": null,
