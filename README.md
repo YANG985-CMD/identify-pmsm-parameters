@@ -19,7 +19,46 @@
 
 核心辨识采用离线积分加权最小二乘，数值由 MATLAB 计算。手册标称值用于准备实验和对照；辨识结果来自采样记录。项目入口为 [SKILL.md](SKILL.md)，仿真入口见 [Simulink 使用说明](simulink/README.md)。
 
-## 2. 参考文献
+## 2. 可直接运行的 Simulink 仿真
+
+模型为 [pmsm_id_bench.slx](simulink/pmsm_id_bench.slx)，已嵌入默认参数，打开后可以直接运行。
+
+### Simulink 仿真框架
+
+![PMSM 参数辨识 Simulink 仿真框架](simulink/reference-results/model-overview.png)
+
+上图从实际 Simulink 模型导出，点击可查看高清图。框架包括：
+
+| 模块 | 作用 |
+|---|---|
+| `Excitation` | 生成 dq 电压激励、电角速度和电角度 |
+| `AverageInverter` | 加入随相电流变化的逆变器平均电压误差 |
+| `PMSMPlant` | 根据实际 dq 电压和速度计算电机电流 |
+| `SampledTelemetry` | 同步采集电流、指令/实际电压、速度与角度 |
+| `CurrentVoltageScope` / `Telemetry` | 显示波形并输出采样数据 |
+
+图中模型负责产生采样数据；参数辨识、FFNN 电压补偿和独立预测验证由配套 MATLAB 脚本完成。
+
+### 运行仿真与查看结果
+
+完整比较在仓库根目录执行：
+
+```matlab
+addpath(fullfile(pwd,'simulink'));
+% Set PMSM_SKILL_TMPDIR first if your project specifies a temporary directory.
+report = pmsm_run_simulink_benchmark(fullfile(pwd,'output','benchmark_demo'));
+assert(report.allChecksPassed);
+```
+
+输出目录必须尚不存在，防止覆盖已有结果。运行器会生成结果表、JSON、原始仿真 MAT 和对比图；缓存写入 `PMSM_SKILL_TMPDIR`，未指定时使用系统临时目录。
+
+R2024b 本地比较中，未补偿时 Rs 相对误差约 **37.913%**，独立标定 FFNN 补偿后约 **−0.0179%**；加入 5 mA 电流和 5 mV 电压噪声后，四参数最大绝对相对误差约 **0.246%**。标定漂移案例未通过独立电流预测检查，无激励案例被拒绝；共 **10/10 项仿真检查通过**。
+
+![仿真对比结果](simulink/reference-results/benchmark-comparison.png)
+
+模型、假设、论文思路对应关系、六组完整结果及复现方式见 [仿真说明](simulink/README.md)。这是固定参数、给定速度/角度的平均电压电气仿真；数值不代表论文复现精度或实物精度。FFNN 示例用于离线辨识输入电压补偿，尚未实现在线注入、无位置传感器控制或自动实机标定。
+
+## 3. 参考文献
 
 以下列出可辨识性、逆变器误差及先进辨识路线的主要参考。当前代码为独立编写的离线基线；仿真中的小型 FFNN 示例用于验证电压误差补偿思路。在线注入、观察器与硬件台架方案的实现情况见文末适用范围。
 
@@ -35,7 +74,7 @@
 
 完整 **17 篇题录**见 [BibTeX](references/references.bib)。各文献的阅读层次与用途见 [论文依据](references/literature.md)；5 篇已核验实物论文的平台、工况和限制见 [实物实验核验](references/hardware-validated-papers.md)。文献中的实物验证与本项目自身的验证分别记录。
 
-## 3. 安装到 Codex
+## 4. 安装到 Codex
 
 核心辨识需要 **MATLAB 与 JVM**，已在 R2024b 验证。可选仿真另外需要 **Simulink**，只使用标准模块，无需自定义库、Simscape、Motor Control Blockset 或 Deep Learning Toolbox。
 
@@ -61,7 +100,7 @@ git clone https://github.com/YANG985-CMD/identify-pmsm-parameters.git ~/.codex/s
 
 > 使用 $identify-pmsm-parameters 检查这份电机采样，辨识电阻、电感和磁链，并用另一组实验验证。
 
-## 4. 先把电机手册交给 AI
+## 5. 先把电机手册交给 AI
 
 不清楚实机接入需要填哪些信息时，可以先向 AI 提供电机手册、产品数据表（PDF、Word 等）或清晰的铭牌图片；有控制板说明书或固件工程时也可一并提供。
 
@@ -87,7 +126,7 @@ AI 会先核对型号与版本，再整理型号、额定电压/电流/转速、
 
 元数据必须说明实验 ID、实测或仿真、单位、电压与角度来源、时间对齐情况。完整字段和可选标志见 [数据约定](references/data-contract.md)。只有转速或速度环 PI 日志不足以识别完整电气参数。
 
-## 5. 通用实物接入
+## 6. 通用实物接入
 
 统一“板卡适配 → 同步采样记录 → 上位机接收 → MATLAB 辨识 → 独立实验验证”。各板卡需映射实际的时间戳、id/iq、ud/uq、电角速度、有效/饱和状态；算法与上位机流程共用。
 
@@ -99,7 +138,7 @@ AI 会先核对型号与版本，再整理型号、额定电压/电流/转速、
 
 这是一套可适配多种控制板的数据接口；还没有在具体板卡上完成实测。自动注入测试电流、电机启停、参数下发、CAN 分片接收及刷写仍需要具体硬件实现。
 
-## 6. MATLAB 辨识与独立验证
+## 7. MATLAB 辨识与独立验证
 
 典型流程为：资料准备与同步采样 → 数据检查 → 参数估计与可辨识性检查 → 另一组实验验证 → 导出参数及诊断。支持 MATLAB table、CSV 和包含 data table 的 MAT 文件。
 
@@ -131,25 +170,6 @@ clear pathCleanup
 ```
 
 真实数据的验收阈值应有控制需求或测量精度依据；不设置 `MaxRMSE` 时只报告预测指标。导出方式及失败状态见 [算法说明](references/algorithms.md)。
-
-## 7. 可直接运行的 Simulink 仿真
-
-模型为 [pmsm_id_bench.slx](simulink/pmsm_id_bench.slx)，已嵌入默认参数，打开后可以直接运行。完整比较在仓库根目录执行：
-
-```matlab
-addpath(fullfile(pwd,'simulink'));
-% Set PMSM_SKILL_TMPDIR first if your project specifies a temporary directory.
-report = pmsm_run_simulink_benchmark(fullfile(pwd,'output','benchmark_demo'));
-assert(report.allChecksPassed);
-```
-
-输出目录必须尚不存在，防止覆盖已有结果。运行器会生成结果表、JSON、原始仿真 MAT 和对比图；缓存写入 `PMSM_SKILL_TMPDIR`，未指定时使用系统临时目录。
-
-R2024b 本地比较中，未补偿时 Rs 相对误差约 **37.913%**，独立标定 FFNN 补偿后约 **−0.0179%**；加入 5 mA 电流和 5 mV 电压噪声后，四参数最大绝对相对误差约 **0.246%**。标定漂移案例未通过独立电流预测检查，无激励案例被拒绝；共 **10/10 项仿真检查通过**。
-
-![仿真对比结果](simulink/reference-results/benchmark-comparison.png)
-
-模型、假设、论文思路对应关系、六组完整结果及复现方式见 [仿真说明](simulink/README.md)。这是固定参数、给定速度/角度的平均电压电气仿真；数值不代表论文复现精度或实物精度。FFNN 示例用于离线辨识输入电压补偿，尚未实现在线注入、无位置传感器控制或自动实机标定。
 
 ## 8. 仓库内容与测试
 
